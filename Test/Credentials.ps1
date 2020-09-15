@@ -1,0 +1,2 @@
+$credentials = New-Object Microsoft.Azure.Commands.ActiveDirectory.PSADPasswordCredential -Property @{StartDate=Get-Date; EndDate=Get-Date -Year 2024; Password='acAC1024!'}
+$sp = New-AzADServicePrincipal -DisplayName 'Drybridge-SP' -PasswordCredential $credentials
