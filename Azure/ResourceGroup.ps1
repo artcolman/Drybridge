@@ -1,6 +1,6 @@
 using module D.InfoClasses
 Import-Module  D.AzureFunctions -Force
-$debug = $true
+$VerbosePreference = "Continue"
 if($debug -eq $true) {
     Get-Module -Name D.AzureFunctions | Format-List * -Force
 }
@@ -21,14 +21,14 @@ $templateName = "ResourceGroups/ResourceGroup.json"
 
 #region Test connection
 
-
-
 if ($continueProcessing -eq $true) {
-    Write-Output 'Test-Subscription sent'
-    $context = Get-AzContext
-    $context
+
+    Write-Verbose 'Test-Subscription process initiated'
+
     $Script:continueProcessing = Test-Subscription -subscriptionID $subscriptionID
-    Write-Output 'Test-Subscription returned'
+
+    Write-Verbose 'Test-Subscription process finished'
+    
 }
 
 #endregion
