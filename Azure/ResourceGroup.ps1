@@ -24,6 +24,9 @@ if ($continueProcessing -eq $true) {
 
     Write-Verbose 'Test-Subscription process initiated'
 
+    $context = Get-AzContext
+    $context | Select-Object -Property *
+    
     $Script:continueProcessing = Test-Subscription -subscriptionID $subscriptionID
 
     Write-Verbose 'Test-Subscription process finished'
