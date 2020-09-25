@@ -17,6 +17,8 @@ $templateName = "ResourceGroups/ResourceGroup.json"
 
 #region Test connection
 
+Write-Output 'Test-Subscription'
+
 if ($continueProcessing -eq $true) {
     $Script:continueProcessing = Test-Subscription -subscriptionID $subscriptionID
 }
