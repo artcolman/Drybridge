@@ -18,7 +18,7 @@ $templateName = "ResourceGroups/ResourceGroup.json"
 #region Test connection
 
 if ($continueProcessing -eq $true) {
-    $Script:continueProcessing = Test-Subscription( -subscriptionID $subscriptionID )
+    $Script:continueProcessing = Test-Subscription -subscriptionID $subscriptionID
 }
 
 #endregion
