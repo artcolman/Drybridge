@@ -29,6 +29,8 @@ if ($continueProcessing -eq $true) {
 
     $tempateURI = Join-Path $gitRepositoryURI $templateName
 
+    Write-Output $templateURI
+    
     $rgGroup = New-ResourceGroup `
                 -RGName $resourceGroupName `
                 -DeloymentLocation $deploymentLocation `
