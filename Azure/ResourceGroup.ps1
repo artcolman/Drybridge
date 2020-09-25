@@ -1,9 +1,8 @@
 using module D.InfoClasses
 Import-Module  D.AzureFunctions -Force
+
 $VerbosePreference = "Continue"
-if($debug -eq $true) {
-    Get-Module -Name D.AzureFunctions | Format-List * -Force
-}
+
 
 #region Internal Variables
 $continueProcessing = $true
@@ -28,7 +27,7 @@ if ($continueProcessing -eq $true) {
     $Script:continueProcessing = Test-Subscription -subscriptionID $subscriptionID
 
     Write-Verbose 'Test-Subscription process finished'
-    
+
 }
 
 #endregion
