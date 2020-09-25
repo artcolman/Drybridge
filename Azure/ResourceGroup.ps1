@@ -3,16 +3,17 @@ Import-Module D.AzureFunctions
 
 #region Internal Variables
 $continueProcessing = $true
-$deploymentLocation = "eastus1"
-$resourceLocation = "eastus1"
+$deploymentLocation = "eastus"
+$gitRepositoryURI = "https://github.com/artcolman/ARM-Templates/blob/master/"
+$resourceGroupName = "rg-pshell-test-eastus-001"
+$resourceLocation = "eastus"
 $subscriptionID = '0e4fd2e3-7f26-412d-a598-3901151357b1'
-$resourceGroupName = ""
-$tempateURI = ""
-# $tenantID = 'd1477d12-f77f-47a0-8b90-a8908fef66a2'
+$templateName = "ResourceGroups/ResourceGroup.json"
+#$tenantID = 'd1477d12-f77f-47a0-8b90-a8908fef66a2'
 
 #endregion
 
-## Offline sign in - could this be a manual intervention?
+## Sign in - Ctrl+Ship+P Azure: SignIn
 
 #region Test connection
 
@@ -26,11 +27,16 @@ if ($continueProcessing -eq $true) {
 
 if ($continueProcessing -eq $true) {
 
+    $tempateURI = Join-Path $gitRepositoryURI $templateName
+
     $rgGroup = New-ResourceGroup `
                 -RGName $resourceGroupName `
                 -DeloymentLocation $deploymentLocation `
                 -TemplateURI $tempateURI `
                 -RGLocation $resourceLocation
+
+    $rgGroup | Format-List * -Force
+
 }
 
 #endregion
