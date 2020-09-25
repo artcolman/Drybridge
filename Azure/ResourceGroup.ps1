@@ -1,5 +1,5 @@
 using module D.InfoClasses
-Import-Module D.AzureFunctions
+Import-Module  D.AzureFunctions -Force
 
 #region Internal Variables
 $continueProcessing = $true
