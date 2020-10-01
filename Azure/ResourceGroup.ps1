@@ -1,76 +1,111 @@
 Import-Module  D.AzureFunctions -Force
 Import-Module  D.ArmTemplateFunctions -Force
 
+$DebugPreference = "SilentlyContinue"
+$VerbosePreference = "Continue"
+
 ## Sign in - Ctrl+Ship+P Azure: SignIn
 
 #region Initialize Variables
 
-$DebugPreference = "Continue"
-$VerbosePreference = "Continue"
+$script:subscriptionID = '0e4fd2e3-7f26-412d-a598-3901151357b1'
 
-$script:BaseTimestamp = Get-Date -format FileDateTime
-$script:resourceGroupName = "rg-pshell-test-eastus-001"
+$script:rgPrefix = -"rg-pshell-test-eastus-"
+$script:rgBaseTemplate = "/ResourceGroups/ResourceGroup - LinkedTemplate.json"
+$script:rgBaseParameter = "/ResourceGroups/ResourceGroup.parameters - Markers.json"
+
 $script:resourceLocation = "eastus"
 $script:deploymentLocation = "eastus"
-$local:cleanUp = $true    
 
-$script:gitRepositoryURI = "https://github.com/artcolman/ARM-Templates/blob/master/marker"
+$local:cleanUp = $true
+
 $script:localRepositoryName = "C:\Users\Art\Documents\GitHub\ARM-Templates"
-$script:localRunFolder = "C:\Users\Art\Documents\Drybridge\AzureDeploys"
-$script:resourceType = "ResourceGroup"
-$script:subscriptionID = '0e4fd2e3-7f26-412d-a598-3901151357b1'
-$script:templateFileName = "/ResourceGroups/ResourceGroup.json"
-$script:templateFilePath = Join-Path $localRepositoryName $templateFileName
-$script:templateURI = $gitRepositoryURI.Replace("/marker", $templateFileName)
-$script:templateParameterFileName = "/ResourceGroups/ResourceGroup.parameters.json"
-$script:templateParameterFilePath = Join-Path $localRepositoryName $templateParameterFileName
-$script:templateParameterURIPath = $gitRepositoryURI.Replace("/marker", $templateParameterFileName)
-#$script:tenantID = 'd1477d12-f77f-47a0-8b90-a8908fef66a2'
-
-Write-Debug ( -join ("TemplateFilePath: ", $templateFilePath))
-Write-Debug ( -join ("TemplateParameterFilePath: ", $templateParameterFilePath))
-Write-Debug ( -join ("TemplateURIPath: ", $templateURI))
-Write-Debug ( -join ("TemplateParameterURIPath: ", $templateParameterURI))
 
 #endregion
 
 function Main {
 
-    $Local:continueProcessing = TestConnection
+    $continueProcessing = $true
+
+    if($continueProcessing) {TestConnection}
 
     if($continueProcessing) {
 
-        $BaseTemplate = "ResourceGroup - NoStorage.json"
-        $BaseParameter = "ResourceGroup.parameters - Markers.json"
-        $BaseTemplateFile = Join-Path -Path $script:localRepositoryName -ChildPath $BaseTemplate
-        $BaseParameterFile = Join-Path -Path $script:localRepositoryName -ChildPath $BaseParameter
+        $script:BaseTimeStamp = Get-Date -UFormat %s
+        $script:RunFolder = Join-Path "C:\Users\Art\Documents\Drybridge\AzureDeploys" $BaseTimestamp
+
+        New-Item -Path $RunFolder -Type Directory
+                    
+    #region Create Resource Group Template Instance
         $ResourceType = "ResourceGroup"
+        $rgBaseTemplateFile = Join-Path -Path $localRepositoryName -ChildPath $rgBaseTemplate
+        $rgBaseParameterFile = Join-Path -Path $localRepositoryName -ChildPath $rgBaseParameter
 
-        $parmFile = -join ($ResourceType, "parameters.json")
-        $newParmFilePath = Join-Path -Path $localRunFolder -ChildPath $parmFile
+        $rgTemplateFile = -join ('/', $ResourceType, '/', $ResourceType, ".json")
+        $rgTemplateFilePath_Run = Join-Path -Path $LocalRunFolder -ChildPath $rgTemplateFile
 
-        Write-Debug "Initiating New-TemplateInstance"
-        $continueProcessing = New-TemplateInstance { `
-            -Timestamp $script:BaseTimestamp `
-            -LocalRunFolder $script:localRunFolder `
+        $rgParmFile = -join ('/', $ResourceType, $ResourceType, ".parameters.json")
+        $rgParmFilePath_Run = Join-Path -Path $localRunFolder -ChildPath $rgParmFile
+
+        $continueProcessing = New-TemplateInstance `
             -ResourceType $ResourceType `
-            -BaseTemplateFile $BaseTemplateFile `
-            -BaseParameterFile $BaseParameterFile 
-        }
-            if ($continueProcessing) {
+            -BaseTemplateFile $rgBaseTemplateFile `
+            -BaseParameterFile $rgBaseParameterFile `
+            -TemplateFilePath $rgTemplateFilePath_Run `
+            -ParmFilePath $rgParmFilePath_Run
+    #endregion
 
-                $MarkerList = "rgName-Marker",  "rgLocation_Marker"
-                $ValueList = $resourceGroupName, $resourceLocation
+        #region Create Storage Account Template Instance
+        $ResourceType = "StorageAccount"
+        $stBaseTemplateFile = Join-Path -Path $localRepositoryName -ChildPath $stBaseTemplate
+        $stBaseParameterFile = Join-Path -Path $localRepositoryName -ChildPath $stBaseParameter
 
-                $continueProcessing = Update-TemplateValues( `
-                    -ParmFilePath $newParmFilePath `
-                    -MarkerList $MarkerList `
-                    -ValueList $ValueList ) 
-            }           
+        $stTemplateFile = -join ('/', $ResourceType, '/', $ResourceType, ".json")
+        $stTemplateFilePath_Run = Join-Path -Path $LocalRunFolder -ChildPath $stTemplateFile
+
+        $stParmFile = -join ('/', $ResourceType, $ResourceType, ".parameters.json")
+        $stParmFilePath_Run = Join-Path -Path $localRunFolder -ChildPath $stParmFile
+
+        $continueProcessing = New-TemplateInstance `
+            -ResourceType $ResourceType `
+            -BaseTemplateFile $stBaseTemplateFile `
+            -BaseParameterFile $stBaseParameterFile `
+            -TemplateFilePath $stTemplateFilePath_Run `
+            -ParmFilePath $stParmFilePath_Run
+    #endregion
     }
 
+    #Resource Group Parameters
+    if ($continueProcessing) {
+
+        $rgName = -join ($rgPrefix, $baseTimeID)
+
+        $rgMarkerList = "rgName-Marker",  "rgLocation-Marker"
+        $rgValueList = $rgName, $resourceLocation
+
+        $continueProcessing = Update-TemplateValues `
+            -ParmFilePath $newParmFilePath `
+            -MarkerList $rgMarkerList `
+            -ValueList $rgValueList
+    }           
+
+    #Storage Account Parameters
+    if ($continueProcessing) {
+
+        $stName = -join ($stPrefix, $baseTimeID)
+        $stMarkerList = "rgName-Marker",  "rgLocation-Marker", "stType-Marker", "stName-Marker"
+        $stValueList = $rgName, $resourceLocation, $stType, $stName
+
+        $continueProcessing = Update-TemplateValues `
+            -ParmFilePath $newParmFilePath `
+            -MarkerList $stMarkerList `
+            -ValueList $stValueList
+    }   
+
     if($continueProcessing) {
-        $continueProcessing = ResourceGroup_New
+        $continueProcessing = ResourceGroup_New `
+            -TemplateFilePath $templateFilePath `
+            -TemplateParameterFilePath $newParmFilePath
     }
 
     if($continueProcessing -and $cleanUp) {
@@ -78,12 +113,6 @@ function Main {
     }
 }
 
-function InitializeVariables {
-
-    Write-Verbose " => Initialize Variables"
-
- 
-}
 
 function TestConnection {
 
@@ -91,7 +120,18 @@ function TestConnection {
 
 }
 
-function ResourceGroup_New {
+function ResourceGroup_New {`
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [string]
+        $TemplateFilePath,
+
+        [Parameter(Mandatory)]
+        [string]
+        $TemplateParameterFilePath
+    )
+    Write-Verbose "=> Starting ResourceGroup_New"
     
     $Local:psDeployment = $null
 
@@ -109,8 +149,8 @@ function ResourceGroup_New {
             New-ResourceGroup `
                 -RGName $resourceGroupName `
                 -DeploymentLocation $deploymentLocation `
-                -TemplateFilePath $templateFilePath `
-                -TemplateParameterFilePath $templateParameterFilePath `
+                -TemplateFilePath $TemplateFilePath `
+                -TemplateParameterFilePath $TemplateParameterFilePath `
                 -RGLocation $resourceLocation            
     }
 
